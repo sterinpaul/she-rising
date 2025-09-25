@@ -3,6 +3,23 @@ import { useEffect, useRef, useState } from "react";
 
 const SPEED_PX_PER_MS = 0.06;
 
+// Images from the about folder
+const aboutImages = [
+  { id: 1, src: "/images/about/IMG_6872.jpg", alt: "She Rising community event" },
+  { id: 2, src: "/images/about/IMG_6919.jpg", alt: "She Rising workshop session" },
+  { id: 3, src: "/images/about/IMG_6925.jpg", alt: "She Rising team collaboration" },
+  { id: 4, src: "/images/about/IMG_6934.jpg", alt: "She Rising educational program" },
+  { id: 5, src: "/images/about/IMG_6961.jpg", alt: "She Rising community gathering" },
+  { id: 6, src: "/images/about/IMG_6991.jpg", alt: "She Rising empowerment session" },
+  { id: 7, src: "/images/about/IMG_7026.jpg", alt: "She Rising outreach program" },
+  { id: 8, src: "/images/about/IMG_7031.jpg", alt: "She Rising leadership development" },
+  { id: 9, src: "/images/about/IMG_7047.jpg", alt: "She Rising advocacy work" },
+  { id: 10, src: "/images/about/IMG_7055.jpg", alt: "She Rising community impact" },
+  { id: 11, src: "/images/about/IMG_7067.jpg", alt: "She Rising educational initiative" },
+  { id: 12, src: "/images/about/IMG_7068.jpg", alt: "She Rising women empowerment" },
+  { id: 13, src: "/images/about/IMG_7098.jpg", alt: "She Rising social change" },
+];
+
 const About = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
@@ -147,8 +164,8 @@ const About = () => {
       </motion.div>
 
       <div className="relative h-full max-w-7xl mx-auto">
-        <div className="absolute left-0 w-1/3 h-full bg-[linear-gradient(to_right,#f7f7f7e7_0%,rgba(247,247,247,0.8)_35%,rgba(247,247,247,0.5)_50%,rgba(247,247,247,0.2)_75%,rgba(247,247,247,0)_100%)]"></div>
-        <div className="absolute right-0 w-1/3 h-full bg-[linear-gradient(to_left,#f7f7f7e7_0%,rgba(247,247,247,0.8)_35%,rgba(247,247,247,0.5)_50%,rgba(247,247,247,0.2)_75%,rgba(247,247,247,0)_100%)]"></div>
+        <div className="absolute left-0 w-1/4 h-full bg-[linear-gradient(to_right,rgba(247,247,247,0.9)_0%,rgba(247,247,247,0.7)_25%,rgba(247,247,247,0.5)_50%,rgba(247,247,247,0.3)_75%,rgba(247,247,247,0)_100%)] z-10 pointer-events-none"></div>
+        <div className="absolute right-0 w-1/4 h-full bg-[linear-gradient(to_left,rgba(247,247,247,0.9)_0%,rgba(247,247,247,0.7)_25%,rgba(247,247,247,0.5)_50%,rgba(247,247,247,0.3)_75%,rgba(247,247,247,0)_100%)] z-10 pointer-events-none"></div>
 
         <div
           ref={scrollerRef}
@@ -157,30 +174,48 @@ const About = () => {
           className="w-full grid grid-flow-col auto-cols-min gap-6 overflow-x-auto hide-scrollbar"
         >
           {/* First set of items */}
-          {new Array(20).fill("").map((_, idx) => (
-            <div
-              key={`first-${idx}`}
-              className="min-w-35 min-h-40 flex flex-col bg-[#efe7dd] shadow-lg px-6 py-10"
+          {aboutImages.map((image, idx) => (
+            <motion.div
+              key={`first-${image.id}`}
+              className="min-w-48 min-h-60 relative overflow-hidden rounded-2xl shadow-lg group cursor-pointer"
+              whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
             >
-              {/* GROWING TEXT BLOCK */}
-              <div className="grow py-2">
-                
+              <img
+                src={image.src}
+                alt={image.alt}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute bottom-4 left-4 right-4">
+                  <p className="text-white text-sm font-medium">
+                    {image.alt}
+                  </p>
+                </div>
               </div>
-            </div>
+            </motion.div>
           ))}
           {/* Duplicate set for infinite scroll */}
-          {new Array(20).fill("").map((_, idx) => (
-            <div
-              key={`second-${idx}`}
-              className="min-w-35 min-h-40 flex flex-col bg-black/30 shadow-2xl px-6 py-10"
+          {aboutImages.map((image, idx) => (
+            <motion.div
+              key={`second-${image.id}`}
+              className="min-w-48 min-h-60 relative overflow-hidden rounded-2xl shadow-lg group cursor-pointer"
+              whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
             >
-              {/* GROWING TEXT BLOCK */}
-              <div className="grow py-2">
-                <p className="text-black text-sm leading-relaxed italic">
-                  Card {idx + 1}
-                </p>
+              <img
+                src={image.src}
+                alt={image.alt}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute bottom-4 left-4 right-4">
+                  <p className="text-white text-sm font-medium">
+                    {image.alt}
+                  </p>
+                </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

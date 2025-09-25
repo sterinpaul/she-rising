@@ -27,13 +27,7 @@ const Impact = () => {
       const response = await impactService.getPublicImpacts({ limit: 20 });
       if (response.data) {
         const impactsArray = Array.isArray(response.data) ? response.data : [response.data];
-        // Add a "Read More" card at the end
-        const impactsWithReadMore = [...impactsArray, {
-          _id: 'read-more',
-          title: 'Read More',
-          isReadMore: true
-        }];
-        setImpacts(impactsWithReadMore);
+        setImpacts(impactsArray);
       }
     } catch (error) {
       console.error('Failed to load impacts:', error);
@@ -96,7 +90,7 @@ const Impact = () => {
           variants={textVariants}
           className="max-w-6xl mx-auto mb-16"
         >
-          <p className="text-black text-lg md:text-xl leading-relaxed font-medium">
+          <p className="text-black text-lg md:text-xl text-justify leading-relaxed font-medium">
             From 2021 To 2023, She Rising Offered Free Academic Tutoring And Life Skills Mentoring For Young Girls In Chalakudy, Kerala. These 
             Sessions Were More Than Just Homework Help, They Became Transformative Spaces Where Girls Explored Topics Often Excluded From 
             Traditional Education. In Addition To Core Subjects Like Science And Math, We Facilitated Discussions On Gender Equality, Menstruation 
@@ -130,21 +124,9 @@ const Impact = () => {
                   y: -5,
                   transition: { duration: 0.3, ease: "easeOut" }
                 }}
-                onClick={()=>navigation('isReadMore' in impact && impact.isReadMore ? '/' : `/impact/${'id' in impact ? impact.id : impact._id}`)}
+                onClick={()=>navigation(`/impact/${'id' in impact ? impact.id : impact._id}`)}
               >
-                <div className={`rounded-2xl h-72 flex flex-col justify-end shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden ${
-                  'isReadMore' in impact && impact.isReadMore ? 'items-center justify-center bg-gradient-to-b from-[#C4A173] to-white' : 'bg-[#C4A173]'
-                }`}>
-                  {'isReadMore' in impact && impact.isReadMore ? (
-                    <div className="text-center">
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        className="text-black font-bold text-xl cursor-pointer"
-                      >
-                        {impact.title} →
-                      </motion.div>
-                    </div>
-                  ) : (
+                <div className="rounded-2xl h-72 flex flex-col justify-end shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden bg-[#C4A173]">
                     <>
                       {/* Impact image or placeholder */}
                       <div className="flex-grow mb-4 overflow-hidden">
@@ -169,7 +151,6 @@ const Impact = () => {
                         </p>
                       </div>
                     </>
-                  )}
                 </div>
               </motion.div>
             ))

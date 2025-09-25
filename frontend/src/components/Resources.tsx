@@ -1,5 +1,5 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 
 // Sample data
   const courses = [
@@ -46,37 +46,22 @@ import { useRef, useEffect } from "react";
       id: 1, 
       title: "Intersectional Feminism Discussion",
       description: "Deep dive into how different identities intersect and shape our experiences.",
-      guest: "Dr. Sarah Ahmed"
+      videoId: "R5sdiF3QNiQ",
+      videoUrl: "https://youtu.be/R5sdiF3QNiQ?si=0XSyPk4t-KsVoBx8"
     },
     { 
       id: 2, 
       title: "Migration & Education",
       description: "Exploring how migration affects educational opportunities and challenges.",
-      guest: "Prof. Maria Santos"
+      videoId: "OH7eCe3DeVE",
+      videoUrl: "https://youtu.be/OH7eCe3DeVE?si=UMFUsXoSSriCafMF"
     },
     { 
       id: 3, 
       title: "Reproductive Justice",
       description: "Understanding reproductive justice as a human rights framework.",
-      guest: "Activist Lisa Chen"
-    },
-    { 
-      id: 4, 
-      title: "Politics of Care",
-      description: "Examining how care work is valued in society and gendered responsibilities.",
-      guest: "Dr. Angela Davis"
-    },
-    { 
-      id: 5, 
-      title: "Community Leadership",
-      description: "Stories of grassroots organizing and creating lasting change.",
-      guest: "Fatima Al-Rashid"
-    },
-    { 
-      id: 6, 
-      title: "Research & Activism",
-      description: "How academic research can inform and strengthen activist movements.",
-      guest: "Dr. bell hooks"
+      videoId: "3tQhddbup0M",
+      videoUrl: "https://youtu.be/3tQhddbup0M?si=XkTs_7KFE_3C-RC3"
     },
   ];
 
@@ -88,6 +73,7 @@ const Resources = () => {
   const scrollerConversationRef = useRef<HTMLDivElement>(null);
   const isScrollingCourse = useRef(false);
   const isScrollingConversation = useRef(false);
+  const videoRefs = useRef<{ [key: string]: HTMLIFrameElement | null }>({});
 
   // Infinite scroll logic for courses
   useEffect(() => {
@@ -138,53 +124,13 @@ const Resources = () => {
     };
   }, [courses.length]);
 
-  // Infinite scroll logic for conversations
+  // Regular scroll logic for conversations (no infinite scroll)
   useEffect(() => {
     const el = scrollerConversationRef.current;
     if (!el) return;
 
-    // Wait for DOM to render and get accurate measurements
-    const initializeCarousel = () => {
-      const firstCard = el.querySelector('.min-w-50');
-      if (!firstCard) return;
-      
-      const cardRect = firstCard.getBoundingClientRect();
-      const cardWidth = cardRect.width + 32; // card width + gap
-      const singleSetWidth = cardWidth * conversations.length;
-      
-      // Start in the middle of the duplicated content (second set)
-      el.scrollLeft = singleSetWidth;
-      
-      const handleScroll = () => {
-        // Don't interfere if smooth scrolling is in progress
-        if (isScrollingConversation.current) return;
-        
-        const scrollLeft = el.scrollLeft;
-        const maxScroll = el.scrollWidth - el.clientWidth;
-        
-        // If scrolled too far left (before first set), jump to equivalent position in second set
-        if (scrollLeft <= 10) {
-          el.scrollLeft = singleSetWidth + scrollLeft;
-        }
-        // If scrolled too far right (beyond second set), jump to equivalent position in first set
-        else if (scrollLeft >= maxScroll - 10) {
-          el.scrollLeft = scrollLeft - singleSetWidth;
-        }
-      };
-
-      el.addEventListener('scroll', handleScroll);
-      
-      return () => {
-        el.removeEventListener('scroll', handleScroll);
-      };
-    };
-
-    // Initialize after a brief delay to ensure DOM is ready
-    const timeout = setTimeout(initializeCarousel, 100);
-    
-    return () => {
-      clearTimeout(timeout);
-    };
+    // Start at the beginning
+    el.scrollLeft = 0;
   }, [conversations.length]);
 
   const containerVariants = {
@@ -209,62 +155,26 @@ const Resources = () => {
   };
 
 
-  const nextCourse = () => {
-    const el = scrollerCourseRef.current;
-    if (!el) return;
-    
-    // Calculate actual card width from DOM
-    const firstCard = el.querySelector('.min-w-50');
-    if (!firstCard) return;
-    
-    const cardRect = firstCard.getBoundingClientRect();
-    const cardWidth = cardRect.width + 32; // card width + gap
-    
-    // Prevent boundary detection during smooth scroll
-    isScrollingCourse.current = true;
-    
-    el.scrollBy({
-      left: cardWidth,
-      behavior: 'smooth'
-    });
-    
-    // Re-enable boundary detection after animation completes
-    setTimeout(() => {
-      isScrollingCourse.current = false;
-    }, 500);
-  };
 
-  const prevCourse = () => {
-    const el = scrollerCourseRef.current;
-    if (!el) return;
-    
-    // Calculate actual card width from DOM
-    const firstCard = el.querySelector('.min-w-50');
-    if (!firstCard) return;
-    
-    const cardRect = firstCard.getBoundingClientRect();
-    const cardWidth = cardRect.width + 32; // card width + gap
-    
-    // Prevent boundary detection during smooth scroll
-    isScrollingCourse.current = true;
-    
-    el.scrollBy({
-      left: -cardWidth,
-      behavior: 'smooth'
-    });
-    
-    // Re-enable boundary detection after animation completes
-    setTimeout(() => {
-      isScrollingCourse.current = false;
-    }, 500);
-  };
 
   const nextConversations = () => {
     const el = scrollerConversationRef.current;
     if (!el) return;
     
+    // Check if we're at the end (no more content to scroll)
+    const scrollLeft = el.scrollLeft;
+    const scrollWidth = el.scrollWidth;
+    const clientWidth = el.clientWidth;
+    const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 10; // 10px tolerance
+    
+    if (isAtEnd) {
+      // Navigate to YouTube channel
+      window.open('https://www.youtube.com/@TheSherising', '_blank');
+      return;
+    }
+    
     // Calculate actual card width from DOM
-    const firstCard = el.querySelector('.min-w-50');
+    const firstCard = el.querySelector('.min-w-80');
     if (!firstCard) return;
     
     const cardRect = firstCard.getBoundingClientRect();
@@ -289,7 +199,7 @@ const Resources = () => {
     if (!el) return;
     
     // Calculate actual card width from DOM
-    const firstCard = el.querySelector('.min-w-50');
+    const firstCard = el.querySelector('.min-w-80');
     if (!firstCard) return;
     
     const cardRect = firstCard.getBoundingClientRect();
@@ -333,7 +243,7 @@ const Resources = () => {
         </div>
 
         {/* Course Modules Section */}
-        <motion.div variants={sectionVariants} className="mb-20">
+        {/* <motion.div variants={sectionVariants} className="mb-20">
           <div className="mb-12">
             <motion.h2
               variants={titleVariants}
@@ -390,7 +300,7 @@ const Resources = () => {
                   key={`course-${course.id}-${index}`}
                   className="min-w-50 min-h-40 rounded-2xl flex flex-col justify-between bg-white px-6 py-8"
                 >
-                  {/* Content Text */}
+                  
                   <div className="grow py-2">
                     <p className="text-[#4D361E] text-sm leading-relaxed italic">
                       {course.description}
@@ -400,7 +310,7 @@ const Resources = () => {
               ))}
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Conversations Section */}
         <motion.div variants={sectionVariants}>
@@ -461,19 +371,40 @@ const Resources = () => {
               ref={scrollerConversationRef}
               className="w-full grid grid-flow-col auto-cols-min gap-8 overflow-x-auto hide-scrollbar"
             >
-              {[...conversations,...conversations].map((conversation, index) => (
-                <motion.div
-                  key={`conversation-${conversation.id}-${index}`}
-                  className="min-w-50 min-h-40 rounded-2xl flex flex-col justify-between bg-white px-6 py-8"
-                >
-                  {/* Content Text */}
-                  <div className="grow py-2">
-                    <p className="text-[#4D361E] text-sm leading-relaxed italic">
-                      {conversation.description}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
+              {conversations.map((conversation, index) => {
+                const uniqueKey = `conversation-${conversation.id}-${index}`;
+                return (
+                  <motion.div
+                    key={uniqueKey}
+                    className="min-w-80 rounded-2xl bg-white overflow-hidden shadow-lg"
+                  >
+                    {/* Video Container with 16:9 aspect ratio */}
+                    <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                      <iframe
+                        ref={(el) => {
+                          videoRefs.current[uniqueKey] = el;
+                        }}
+                        className="absolute top-0 left-0 w-full h-full"
+                        src={`https://www.youtube.com/embed/${conversation.videoId}?enablejsapi=1&controls=1&modestbranding=1&rel=0&fs=1`}
+                        title={conversation.title}
+                        // frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                        allowFullScreen
+                      />
+                    </div>
+                    
+                    {/* Video Info */}
+                    {/* <div className="p-6">
+                      <h3 className="text-lg font-semibold text-[#4D361E] mb-2">
+                        {conversation.title}
+                      </h3>
+                      <p className="text-[#4D361E] text-sm leading-relaxed italic">
+                        {conversation.description}
+                      </p>
+                    </div> */}
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
           </div>

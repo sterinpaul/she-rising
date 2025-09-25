@@ -29,14 +29,17 @@ const Team = () => {
   const teamMembers = [
     {
       name: "Adeline Chacko",
+      image: "/images/team/adeline.jpg",
       role: "Founder, Executive Director"
     },
     {
-      name: "Eren Eberling", 
+      name: "Eren Eberling",
+      image: "/images/team/eren.png",
       role: "Co-Executive Director"
     },
     {
       name: "Niranjana Das",
+      image: "/images/team/niranjana.jpg",
       role: "Co-ordinator"
     }
   ];
@@ -81,16 +84,24 @@ const Team = () => {
                 transition: { duration: 0.3, ease: "easeOut" }
               }}
             >
-              <div className="bg-[#C4A173] rounded-2xl p-8 h-64 flex flex-col justify-end shadow-lg hover:shadow-xl transition-shadow duration-300">
-                {/* Placeholder for team member image */}
-                <div className="flex-grow mb-6 bg-[#B8956A] rounded-lg opacity-30"></div>
+              <div className="bg-[#C4A173] rounded-2xl overflow-hidden h-64 flex flex-col justify-end shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
+                {/* Team member image with gradient overlay */}
+                <div className="absolute inset-0">
+                  <img 
+                    src={member.image} 
+                    alt={member.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Gradient overlay from card color to transparent */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#C4A173] via-[rgba(196,161,115,0.1)] to-transparent"></div>
+                </div>
                 
                 {/* Team member info */}
-                <div className="text-center">
-                  <h3 className="text-black font-bold text-lg mb-1">
+                <div className="relative z-10 text-center p-4">
+                  <h3 className="text-white font-bold text-lg drop-shadow-md">
                     {member.name}
                   </h3>
-                  <p className="text-black text-sm font-medium opacity-80">
+                  <p className="text-white text-sm font-medium opacity-90 drop-shadow-sm">
                     {member.role}
                   </p>
                 </div>

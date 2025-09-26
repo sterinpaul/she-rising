@@ -110,6 +110,24 @@ const articleHelpers = {
         return await this.findAllArticles(filter, options);
     },
 
+    // Search articles with additional filters
+    async searchArticlesWithFilters(searchTerm, additionalFilters = {}, options = {}) {
+        const searchFilter = {
+            $or: [
+                { title: new RegExp(searchTerm, 'i') },
+                { content: new RegExp(searchTerm, 'i') }
+            ]
+        };
+        
+        // Combine search filter with additional filters
+        const combinedFilter = {
+            ...additionalFilters,
+            ...searchFilter
+        };
+        
+        return await this.findAllArticles(combinedFilter, options);
+    },
+
     // Get article count
     async getArticleCount(filter = {}) {
         const query = { isActive: true, ...filter };

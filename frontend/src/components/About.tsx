@@ -5,19 +5,22 @@ const SPEED_PX_PER_MS = 0.06;
 
 // Images from the about folder
 const aboutImages = [
-  { id: 1, src: "/images/about/IMG_6872.jpg", alt: "She Rising community event" },
-  { id: 2, src: "/images/about/IMG_6919.jpg", alt: "She Rising workshop session" },
-  { id: 3, src: "/images/about/IMG_6925.jpg", alt: "She Rising team collaboration" },
-  { id: 4, src: "/images/about/IMG_6934.jpg", alt: "She Rising educational program" },
-  { id: 5, src: "/images/about/IMG_6961.jpg", alt: "She Rising community gathering" },
-  { id: 6, src: "/images/about/IMG_6991.jpg", alt: "She Rising empowerment session" },
-  { id: 7, src: "/images/about/IMG_7026.jpg", alt: "She Rising outreach program" },
-  { id: 8, src: "/images/about/IMG_7031.jpg", alt: "She Rising leadership development" },
-  { id: 9, src: "/images/about/IMG_7047.jpg", alt: "She Rising advocacy work" },
-  { id: 10, src: "/images/about/IMG_7055.jpg", alt: "She Rising community impact" },
-  { id: 11, src: "/images/about/IMG_7067.jpg", alt: "She Rising educational initiative" },
-  { id: 12, src: "/images/about/IMG_7068.jpg", alt: "She Rising women empowerment" },
-  { id: 13, src: "/images/about/IMG_7098.jpg", alt: "She Rising social change" },
+  { id: 1, src: "/images/about/1.svg", alt: "She Rising community event" },
+  { id: 2, src: "/images/about/2.svg", alt: "She Rising workshop session" },
+  { id: 3, src: "/images/about/3.svg", alt: "She Rising team collaboration" },
+  { id: 4, src: "/images/about/4.svg", alt: "She Rising educational program" },
+  { id: 5, src: "/images/about/5.svg", alt: "She Rising community gathering" },
+  { id: 6, src: "/images/about/6.svg", alt: "She Rising empowerment session" },
+  { id: 7, src: "/images/about/7.svg", alt: "She Rising outreach program" },
+  { id: 8, src: "/images/about/8.svg", alt: "She Rising leadership development" },
+  { id: 9, src: "/images/about/9.svg", alt: "She Rising advocacy work" },
+  { id: 10, src: "/images/about/10.svg", alt: "She Rising community impact" },
+  { id: 11, src: "/images/about/11.svg", alt: "She Rising educational initiative" },
+  { id: 12, src: "/images/about/12.svg", alt: "She Rising women empowerment" },
+  { id: 13, src: "/images/about/13.svg", alt: "She Rising social change" },
+  { id: 14, src: "/images/about/14.svg", alt: "She Rising empowerment session" },
+  { id: 15, src: "/images/about/15.svg", alt: "She Rising outreach program" },
+  { id: 16, src: "/images/about/16.svg", alt: "She Rising educational program" },
 ];
 
 const About = () => {

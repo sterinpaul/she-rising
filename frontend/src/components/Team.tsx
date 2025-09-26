@@ -73,7 +73,7 @@ const Team = () => {
           className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto"
           variants={containerVariants}
         >
-          {teamMembers.map((member, index) => (
+          {teamMembers.map((member, index, arr) => (
             <motion.div
               key={index}
               variants={cardVariants}
@@ -84,13 +84,13 @@ const Team = () => {
                 transition: { duration: 0.3, ease: "easeOut" }
               }}
             >
-              <div className="bg-[#C4A173] rounded-2xl overflow-hidden h-64 flex flex-col justify-end shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
+              <div className="bg-[#C4A173] rounded-2xl overflow-hidden h-100 md:h-64 flex flex-col justify-end shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
                 {/* Team member image with gradient overlay */}
                 <div className="absolute inset-0">
                   <img 
                     src={member.image} 
                     alt={member.name}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover ${index+1 < arr.length && "object-top"}`}
                   />
                   {/* Gradient overlay from card color to transparent */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#C4A173] via-[rgba(196,161,115,0.1)] to-transparent"></div>

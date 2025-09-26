@@ -13,11 +13,13 @@ const articleControllers = () => {
             if (category) filter.category = category;
             if (author) filter.author = new RegExp(author, 'i');
             
-            // Handle search separately using helper method
+            // Handle search with combined filters
             let result;
             if (search) {
-                result = await articleHelpers.searchArticles(search, { page, limit });
+                // Use combined search that includes other filters
+                result = await articleHelpers.searchArticlesWithFilters(search, filter, { page, limit });
             } else {
+                // Use regular filtering when no search term
                 result = await articleHelpers.findAllArticles(filter, { page, limit });
             }
 

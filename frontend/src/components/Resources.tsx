@@ -173,12 +173,13 @@ const Resources = () => {
       return;
     }
     
-    // Calculate actual card width from DOM
-    const firstCard = el.querySelector('.min-w-80');
+    // Calculate actual card width from DOM - updated selector
+    const firstCard = el.querySelector('.flex-none');
     if (!firstCard) return;
     
     const cardRect = firstCard.getBoundingClientRect();
-    const cardWidth = cardRect.width + 32; // card width + gap
+    const gap = window.innerWidth >= 768 ? 32 : 16; // md:gap-8 vs gap-4
+    const cardWidth = cardRect.width + gap;
     
     // Prevent boundary detection during smooth scroll
     isScrollingConversation.current = true;
@@ -198,12 +199,13 @@ const Resources = () => {
     const el = scrollerConversationRef.current;
     if (!el) return;
     
-    // Calculate actual card width from DOM
-    const firstCard = el.querySelector('.min-w-80');
+    // Calculate actual card width from DOM - updated selector
+    const firstCard = el.querySelector('.flex-none');
     if (!firstCard) return;
     
     const cardRect = firstCard.getBoundingClientRect();
-    const cardWidth = cardRect.width + 32; // card width + gap
+    const gap = window.innerWidth >= 768 ? 32 : 16; // md:gap-8 vs gap-4
+    const cardWidth = cardRect.width + gap;
     
     // Prevent boundary detection during smooth scroll
     isScrollingConversation.current = true;
@@ -344,22 +346,24 @@ const Resources = () => {
           </div>
 
           {/* Conversations Carousel */}
-          <div className="relative">
-            <div className="relative h-full w-full">
-            <div className="absolute left-0 flex items-center w-1/3 h-full bg-[linear-gradient(to_right,_#C4A173_0%,_rgba(196,161,115,0.8)_25%,_rgba(196,161,115,0.5)_50%,_rgba(196,161,115,0.2)_75%,_rgba(196,161,115,0)_100%)]">
+          <div className="relative flex items-center justify-center">
+            {/* Left Arrow */}
+            <div className="absolute left-0 z-20 hidden md:flex">
               <motion.button
                 onClick={prevConversations}
-                className="w-12 h-12 bg-[#C4A173] rounded-full flex items-center justify-center shadow-lg hover:bg-[#6B3410] cursor-pointer transition-colors z-10"
+                className="w-12 h-12 bg-[#C4A173] rounded-full flex items-center justify-center shadow-lg hover:bg-[#6B3410] cursor-pointer transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <img src="/icons/arrow.svg" alt="Arrow Left" />
               </motion.button>
             </div>
-            <div className="absolute right-0 flex items-center justify-end w-1/3 h-full bg-[linear-gradient(to_left,_#C4A173_0%,_rgba(196,161,115,0.8)_25%,_rgba(196,161,115,0.5)_50%,_rgba(196,161,115,0.2)_75%,_rgba(196,161,115,0)_100%)]">
+            
+            {/* Right Arrow */}
+            <div className="absolute right-0 z-20 hidden md:flex">
               <motion.button
                 onClick={nextConversations}
-                className="w-12 h-12 bg-[#C4A173] rounded-full flex items-center justify-center shadow-lg hover:bg-[#6B3410] cursor-pointer transition-colors z-10"
+                className="w-12 h-12 bg-[#C4A173] rounded-full flex items-center justify-center shadow-lg hover:bg-[#6B3410] cursor-pointer transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -367,46 +371,48 @@ const Resources = () => {
               </motion.button>
             </div>
 
-            <div
-              ref={scrollerConversationRef}
-              className="w-full grid grid-flow-col auto-cols-min gap-8 overflow-x-auto hide-scrollbar"
-            >
-              {conversations.map((conversation, index) => {
-                const uniqueKey = `conversation-${conversation.id}-${index}`;
-                return (
-                  <motion.div
-                    key={uniqueKey}
-                    className="min-w-80 rounded-2xl bg-white overflow-hidden shadow-lg"
-                  >
-                    {/* Video Container with 16:9 aspect ratio */}
-                    <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                      <iframe
-                        ref={(el) => {
-                          videoRefs.current[uniqueKey] = el;
-                        }}
-                        className="absolute top-0 left-0 w-full h-full"
-                        src={`https://www.youtube.com/embed/${conversation.videoId}?enablejsapi=1&controls=1&modestbranding=1&rel=0&fs=1`}
-                        title={conversation.title}
-                        // frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                        allowFullScreen
-                      />
-                    </div>
-                    
-                    {/* Video Info */}
-                    {/* <div className="p-6">
-                      <h3 className="text-lg font-semibold text-[#4D361E] mb-2">
-                        {conversation.title}
-                      </h3>
-                      <p className="text-[#4D361E] text-sm leading-relaxed italic">
-                        {conversation.description}
-                      </p>
-                    </div> */}
-                  </motion.div>
-                );
-              })}
+            {/* Videos Container */}
+            <div className="w-full px-0 md:px-16">
+              <div
+                ref={scrollerConversationRef}
+                className="w-full flex gap-4 md:gap-8 overflow-x-auto hide-scrollbar snap-x snap-mandatory"
+                style={{ scrollPaddingLeft: '16px', scrollPaddingRight: '16px' }}
+              >
+                {conversations.map((conversation, index) => {
+                  const uniqueKey = `conversation-${conversation.id}-${index}`;
+                  return (
+                    <motion.div
+                      key={uniqueKey}
+                      className="flex-none w-[280px] sm:w-[320px] md:w-[400px] lg:w-[450px] rounded-2xl bg-white overflow-hidden shadow-lg snap-center"
+                    >
+                      {/* Video Container with 16:9 aspect ratio */}
+                      <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                        <iframe
+                          ref={(el) => {
+                            videoRefs.current[uniqueKey] = el;
+                          }}
+                          className="absolute top-0 left-0 w-full h-full"
+                          src={`https://www.youtube.com/embed/${conversation.videoId}?enablejsapi=1&controls=1&modestbranding=1&rel=0&fs=1`}
+                          title={conversation.title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                          allowFullScreen
+                        />
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+
+            {/* Mobile Navigation Dots */}
+            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 md:hidden">
+              {conversations.map((_, index) => (
+                <div
+                  key={index}
+                  className="w-2 h-2 rounded-full bg-white bg-opacity-50"
+                />
+              ))}
+            </div>
           </div>
         </motion.div>
       </motion.div>

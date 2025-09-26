@@ -91,13 +91,10 @@ const ArticleEditor: React.FC = () => {
       
      
       if (isEditing && id) {
-        console.log('Updating article with ID:', id);
         await articleService.updateArticle(id, articleData, newImageFiles);
       } else {
         await articleService.createArticle(articleData as Omit<Article, 'id'>, newImageFiles);
       }
-
-      console.log('Save successful, navigating to articles list');
       navigate('/dashboard/articles');
     } catch (error: any) {
       console.error('Failed to save article:', error);
@@ -181,11 +178,6 @@ const ArticleEditor: React.FC = () => {
         alert(`Maximum 10 images allowed. Only ${filesToAdd.length} images will be added.`);
       }
       
-      if (filesToAdd.length < fileArray.length) {
-        const skipped = fileArray.length - filesToAdd.length;
-        console.log(`${skipped} files were skipped due to validation errors or limits.`);
-      }
-      
       // Add new files
       setNewImageFiles(prev => [...prev, ...filesToAdd]);
       
@@ -200,12 +192,6 @@ const ArticleEditor: React.FC = () => {
         };
         reader.readAsDataURL(file);
       });
-      
-      console.log('Valid files added:', filesToAdd.map(f => ({
-        name: f.name,
-        size: f.size,
-        type: f.type
-      })));
     }
   };
 

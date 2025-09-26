@@ -70,14 +70,6 @@ const ImpactEditor: React.FC = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      
-      // Add validation logging
-      console.log('Save attempt - Impact data:', {
-        title: impact.title,
-        content: impact.content,
-        date: impact.date
-      });
-      
       // Validate required fields
       if (!impact.title?.trim()) {
         alert('Title is required');
@@ -101,17 +93,11 @@ const ImpactEditor: React.FC = () => {
         images: impact.images // This will be used for existingImages in the service
       };
 
-      console.log('Attempting to save with data:', impactData);
-
       if (isEditing && id) {
-        console.log('Updating impact with ID:', id);
         await impactService.updateImpact(id, impactData, newImageFiles);
       } else {
-        console.log('Creating new impact');
         await impactService.createImpact(impactData as Omit<Impact, 'id' | 'createdAt'>, newImageFiles);
       }
-
-      console.log('Save successful, navigating to impacts list');
       navigate('/dashboard/impacts');
     } catch (error: any) {
       console.error('Failed to save impact:', error);

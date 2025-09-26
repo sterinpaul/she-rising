@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import impactHelpers from '../helpers/impactHelpers.js';
+import { processImpactImages } from '../utils/cloudinaryUtils.js';
 
 const impactControllers = () => {
 
@@ -16,9 +17,12 @@ const impactControllers = () => {
                 result = await impactHelpers.findAllImpacts({}, { page, limit });
             }
 
+            // Process image URLs for display
+            const processedImpacts = result.impacts.map(impact => processImpactImages(impact));
+
             return res.status(200).json({
                 status: true,
-                data: result.impacts,
+                data: processedImpacts,
                 pagination: result.pagination
             });
         } catch (error) {
@@ -53,7 +57,7 @@ const impactControllers = () => {
 
             return res.status(200).json({
                 status: true,
-                data: impact
+                data: processImpactImages(impact)
             });
         } catch (error) {
             console.error('Get impact by ID error:', error);
@@ -88,7 +92,9 @@ const impactControllers = () => {
             // Handle uploaded images
             const images = [];
             if (req.files && req.files.length > 0) {
-                images.push(...req.files.map(file => file.path));
+                images.push(...req.files.map(file => {
+                    return file.path;
+                }));
             }
 
             // Add images to impact data
@@ -100,17 +106,17 @@ const impactControllers = () => {
             }
 
             const impact = await impactHelpers.createImpact(value);
-
             return res.status(201).json({
                 status: true,
                 message: 'Impact created successfully',
-                data: impact
+                data: processImpactImages(impact)
             });
         } catch (error) {
             console.error('Create impact error:', error);
             return res.status(500).json({ 
                 status: false, 
-                message: 'Error creating impact' 
+                message: 'Error creating impact',
+                error: error.message 
             });
         }
     };
@@ -194,7 +200,7 @@ const impactControllers = () => {
             return res.status(200).json({
                 status: true,
                 message: 'Impact updated successfully',
-                data: updatedImpact
+                data: processImpactImages(updatedImpact)
             });
         } catch (error) {
             console.error('Update impact error:', error);

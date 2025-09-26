@@ -36,15 +36,7 @@ class ArticleService {
       });
       
       const finalUrl = `${this.publicBasePath}?${params.toString()}`;
-      console.log('🔗 ArticleService API call:');
-      console.log('  - filters:', filters);
-      console.log('  - URL:', finalUrl);
-      
-      // Check for potential backend filtering issues
-      if (filters.search && filters.category) {
-        console.log('⚠️  COMBINED FILTER: Check if backend properly handles both search + category');
-      }
-      
+        
       const response = await api.get(finalUrl);
       return response.data;
     } catch (error: any) {

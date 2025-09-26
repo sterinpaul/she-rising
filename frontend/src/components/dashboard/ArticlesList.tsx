@@ -188,8 +188,6 @@ const ArticlesListContainer = memo<{
         ...(categoryFilter !== 'all' && { category: categoryFilter })
       };
       
-      console.log('🔍 ArticlesList filters:', filters);
-      
       const response = await articleService.getAllArticles(filters);
       if (response.data) {
         const articlesArray = Array.isArray(response.data) ? response.data : [response.data];
@@ -208,7 +206,6 @@ const ArticlesListContainer = memo<{
 
   // Reset to page 1 and load articles when search term or category changes
   useEffect(() => {
-    console.log('🔄 Filter change:', { search: debouncedSearchTerm, category: categoryFilter });
     setCurrentPage(1);
     loadArticles(1);
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -131,6 +131,8 @@ const articleControllers = () => {
             }
 
             const articleSchema = Joi.object({
+                _id: Joi.string().optional(), // Allow _id field for frontend compatibility
+                id: Joi.string().optional(), // Allow id field for frontend compatibility
                 title: Joi.string().max(200).trim().optional(),
                 content: Joi.string().optional(),
                 author: Joi.string().optional(),
@@ -143,7 +145,10 @@ const articleControllers = () => {
                 existingImages: Joi.alternatives().try(
                     Joi.string(),
                     Joi.array().items(Joi.string())
-                ).optional()
+                ).optional(),
+                createdAt: Joi.string().optional(), // Allow timestamp fields
+                updatedAt: Joi.string().optional(), // Allow timestamp fields
+                images: Joi.array().items(Joi.string()).optional() // Allow images array from frontend
             });
 
             const { error, value } = articleSchema.validate(req.body);
@@ -178,8 +183,12 @@ const articleControllers = () => {
             }
             value.images = [...existingImages, ...newImages];
             
-            // Remove existingImages from the value object as it's not part of the schema
+            // Remove fields that shouldn't be updated in the database
             delete value.existingImages;
+            delete value._id;
+            delete value.id;
+            delete value.createdAt;
+            delete value.updatedAt;
 
             const updatedArticle = await articleHelpers.updateArticleById(id, value);
 

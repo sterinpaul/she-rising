@@ -174,7 +174,7 @@ const About = () => {
           className="w-full grid grid-flow-col auto-cols-min gap-6 overflow-x-auto hide-scrollbar"
         >
           {/* First set of items */}
-          {aboutImages.map((image, idx) => (
+          {aboutImages.map((image) => (
             <motion.div
               key={`first-${image.id}`}
               className="min-w-48 min-h-60 relative overflow-hidden rounded-2xl shadow-lg group cursor-pointer"
@@ -196,7 +196,7 @@ const About = () => {
             </motion.div>
           ))}
           {/* Duplicate set for infinite scroll */}
-          {aboutImages.map((image, idx) => (
+          {aboutImages.map((image) => (
             <motion.div
               key={`second-${image.id}`}
               className="min-w-48 min-h-60 relative overflow-hidden rounded-2xl shadow-lg group cursor-pointer"

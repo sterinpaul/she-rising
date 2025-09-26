@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fragment } from 'react';
 import { XMarkIcon, CalendarIcon, UserIcon } from '@heroicons/react/24/outline';
 import type { Article, Impact } from '../../types/dashboard';
 

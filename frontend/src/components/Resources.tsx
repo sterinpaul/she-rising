@@ -1,5 +1,5 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 
 // Sample data
   const courses = [

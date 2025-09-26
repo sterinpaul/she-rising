@@ -12,6 +12,10 @@ const api = axios.create({
 // Request interceptor to handle auth
 api.interceptors.request.use(
   (config) => {
+    // If sending FormData, remove Content-Type header to let axios set the boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
     // Axios will automatically include cookies due to withCredentials: true
     return config;
   },

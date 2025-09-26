@@ -10,6 +10,7 @@ import {
   CalendarIcon
 } from '@heroicons/react/24/outline';
 import RichTextEditor from './RichTextEditor';
+import PreviewModal from './PreviewModal';
 import type { Impact } from '../../types/dashboard';
 import { impactService } from '../../services/impactService';
 
@@ -28,6 +29,7 @@ const ImpactEditor: React.FC = () => {
   });
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (isEditing) {
@@ -69,25 +71,51 @@ const ImpactEditor: React.FC = () => {
     try {
       setSaving(true);
       
+      // Add validation logging
+      console.log('Save attempt - Impact data:', {
+        title: impact.title,
+        content: impact.content,
+        date: impact.date
+      });
+      
+      // Validate required fields
+      if (!impact.title?.trim()) {
+        alert('Title is required');
+        return;
+      }
+      
+      if (!impact.content?.trim()) {
+        alert('Content is required');
+        return;
+      }
+      
+      if (!impact.date?.trim()) {
+        alert('Date is required');
+        return;
+      }
+      
       const impactData = {
-        ...impact
+        title: impact.title?.trim(),
+        content: impact.content?.trim(),
+        date: impact.date?.trim(),
+        images: impact.images // This will be used for existingImages in the service
       };
 
-      // Ensure date is always present
-      if (!impactData.date) {
-        impactData.date = new Date().toISOString().split('T')[0];
-      }
-
+      console.log('Attempting to save with data:', impactData);
 
       if (isEditing && id) {
+        console.log('Updating impact with ID:', id);
         await impactService.updateImpact(id, impactData, newImageFiles);
       } else {
+        console.log('Creating new impact');
         await impactService.createImpact(impactData as Omit<Impact, 'id' | 'createdAt'>, newImageFiles);
       }
 
+      console.log('Save successful, navigating to impacts list');
       navigate('/dashboard/impacts');
     } catch (error: any) {
       console.error('Failed to save impact:', error);
+      alert(`Failed to save impact: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
@@ -186,30 +214,37 @@ const ImpactEditor: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          {isEditing && (
-            <motion.button
-              onClick={() => navigate(`/impact/${id}`)}
-              className="inline-flex items-center px-4 py-2 border border-[#C4A173] text-[#C4A173] rounded-lg hover:bg-[#C4A173] hover:text-white transition-colors"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <EyeIcon className="w-4 h-4 mr-2" />
-              Preview
-            </motion.button>
-          )}
+          <motion.button
+            onClick={() => setShowPreview(true)}
+            disabled={!impact.title || !impact.content}
+            className="inline-flex items-center px-4 py-2 border border-[#C4A173] text-[#C4A173] rounded-lg hover:bg-[#C4A173] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            whileHover={{ scale: (!impact.title || !impact.content) ? 1 : 1.02 }}
+            whileTap={{ scale: (!impact.title || !impact.content) ? 1 : 0.98 }}
+          >
+            <EyeIcon className="w-4 h-4 mr-2" />
+            Preview
+          </motion.button>
           
           <motion.button
             onClick={handleSave}
-            disabled={saving || !impact.title || !impact.content || !impact.date}
+            disabled={saving || !impact.title?.trim() || !impact.content?.trim() || !impact.date?.trim()}
             className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#C4A173] to-[#4D361E] text-white rounded-lg hover:shadow-lg transition-shadow disabled:opacity-50"
-            whileHover={{ scale: (saving || !impact.title || !impact.content || !impact.date) ? 1 : 1.02 }}
-            whileTap={{ scale: (saving || !impact.title || !impact.content || !impact.date) ? 1 : 0.98 }}
+            whileHover={{ scale: (saving || !impact.title?.trim() || !impact.content?.trim() || !impact.date?.trim()) ? 1 : 1.02 }}
+            whileTap={{ scale: (saving || !impact.title?.trim() || !impact.content?.trim() || !impact.date?.trim()) ? 1 : 0.98 }}
+            title={
+              saving ? 'Saving...' : 
+              !impact.title?.trim() ? 'Title is required' :
+              !impact.content?.trim() ? 'Content is required' :
+              !impact.date?.trim() ? 'Date is required' :
+              'Save impact'
+            }
           >
             <CheckIcon className="w-4 h-4 mr-2" />
             {saving ? 'Saving...' : 'Save Impact'}
           </motion.button>
         </div>
       </div>
+
 
       {/* Editor Form */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 space-y-6">
@@ -356,6 +391,20 @@ const ImpactEditor: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Preview Modal */}
+      <PreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        data={{
+          ...impact,
+          images: [
+            ...(impact.images || []),
+            ...imagePreview
+          ]
+        }}
+        type="impact"
+      />
     </motion.div>
   );
 };

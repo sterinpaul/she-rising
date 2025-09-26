@@ -21,7 +21,6 @@ export interface ImpactFilters {
 }
 
 class ImpactService {
-  private readonly adminBasePath = '/admin';
   private readonly publicBasePath = '/impacts';
 
   // Admin methods (protected routes)
@@ -34,7 +33,7 @@ class ImpactService {
         }
       });
       
-      const response = await api.get(`${this.adminBasePath}/impacts?${params.toString()}`);
+      const response = await api.get(`${this.publicBasePath}?${params.toString()}`);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to fetch impacts');
@@ -43,7 +42,7 @@ class ImpactService {
 
   async getImpactById(id: string): Promise<ImpactResponse> {
     try {
-      const response = await api.get(`${this.adminBasePath}/impact/${id}`);
+      const response = await api.get(`${this.publicBasePath}/${id}`);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to fetch impact');
@@ -75,7 +74,7 @@ class ImpactService {
         });
       }
       
-      const response = await api.post(`${this.adminBasePath}/add-impact`, formData, {
+      const response = await api.post(`${this.publicBasePath}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -111,7 +110,7 @@ class ImpactService {
         });
       }
       
-      const response = await api.put(`${this.adminBasePath}/edit-impact/${id}`, formData, {
+      const response = await api.put(`${this.publicBasePath}/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -124,7 +123,7 @@ class ImpactService {
 
   async deleteImpact(id: string): Promise<ImpactResponse> {
     try {
-      const response = await api.delete(`${this.adminBasePath}/delete-impact/${id}`);
+      const response = await api.delete(`${this.publicBasePath}/${id}`);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to delete impact');

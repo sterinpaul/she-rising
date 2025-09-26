@@ -31,9 +31,9 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-[#E8DDD4] text-[#8B4513] overflow-x-hidden">
       <Navigation />
-      {/* <Hero /> */}
-      {/* <About /> */}
-      {/* <Team /> */}
+      <Hero />
+      <About />
+      <Team />
       <Impact />
       <Resources />
       <Articles />

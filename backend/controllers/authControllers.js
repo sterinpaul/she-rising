@@ -35,7 +35,7 @@ const authControllers = () => {
             res.cookie('authToken', token, {
                 httpOnly: true,                    // Prevents XSS attacks
                 secure: isProduction,             // HTTPS only in production
-                sameSite: 'strict',               // CSRF protection
+                sameSite: isProduction ? 'strict' : 'lax',  // More permissive in dev
                 maxAge: 24 * 60 * 60 * 1000,     // 24 hours in milliseconds
                 path: '/',                        // Cookie available for entire app
                 domain: isProduction ? undefined : undefined  // Let browser set domain automatically
@@ -61,7 +61,7 @@ const authControllers = () => {
             const isProduction = process.env.NODE_ENV === 'production'
             res.clearCookie('authToken', {
                 path: '/',                  // Must match the path used when setting
-                sameSite: 'strict',        // Must match sameSite setting
+                sameSite: isProduction ? 'strict' : 'lax',  // Must match sameSite setting
                 secure: isProduction,      // Must match secure setting
                 httpOnly: true             // Must match httpOnly setting
             })

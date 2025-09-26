@@ -23,7 +23,6 @@ export interface ArticleFilters {
 }
 
 class ArticleService {
-  private readonly adminBasePath = '/admin';
   private readonly publicBasePath = '/articles';
 
   // Admin methods (protected routes)
@@ -45,7 +44,7 @@ class ArticleService {
 
   async getArticleById(id: string): Promise<ArticleResponse> {
     try {
-      const response = await api.get(`${this.adminBasePath}/article/${id}`);
+      const response = await api.get(`${this.publicBasePath}/${id}`);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to fetch article');
@@ -77,7 +76,7 @@ class ArticleService {
         });
       }
       
-      const response = await api.post(`${this.adminBasePath}/add-article`, formData, {
+      const response = await api.post(`${this.publicBasePath}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -113,7 +112,7 @@ class ArticleService {
         });
       }
       
-      const response = await api.put(`${this.adminBasePath}/edit-article/${id}`, formData, {
+      const response = await api.put(`${this.publicBasePath}/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -126,7 +125,7 @@ class ArticleService {
 
   async deleteArticle(id: string): Promise<ArticleResponse> {
     try {
-      const response = await api.delete(`${this.adminBasePath}/delete-article/${id}`);
+      const response = await api.delete(`${this.publicBasePath}/${id}`);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to delete article');

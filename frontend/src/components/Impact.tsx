@@ -11,11 +11,13 @@ type ImpactWithReadMore = ImpactType | {
 };
 
 const Impact = () => {
-  const ref = useRef(null);
+  const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const navigation = useNavigate();
   const [impacts, setImpacts] = useState<ImpactWithReadMore[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   useEffect(() => {
     loadImpacts();
@@ -24,7 +26,7 @@ const Impact = () => {
   const loadImpacts = async () => {
     try {
       setLoading(true);
-      const response = await impactService.getPublicImpacts({ limit: 20 });
+      const response = await impactService.getPublicImpacts({ limit: 100 }); // Load more to enable pagination
       if (response.data) {
         const impactsArray = Array.isArray(response.data) ? response.data : [response.data];
         setImpacts(impactsArray);
@@ -34,6 +36,47 @@ const Impact = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(impacts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const displayedImpacts = impacts.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Smooth scroll to top of section
+    ref.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Generate page numbers array
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
   };
 
   const containerVariants = {
@@ -114,7 +157,7 @@ const Impact = () => {
               />
             ))
           ) : (
-            impacts.map((impact) => (
+            displayedImpacts.map((impact) => (
               <motion.div
                 key={impact._id}
                 variants={cardVariants}
@@ -156,6 +199,66 @@ const Impact = () => {
             ))
           )}
         </motion.div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center mt-12 space-x-2">
+            {/* Previous Button */}
+            <motion.button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-[#C4A173] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#6B3410] transition-colors"
+              whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
+              whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+            >
+              ‹ Previous
+            </motion.button>
+
+            {/* Page Numbers */}
+            <div className="flex items-center space-x-1">
+              {getPageNumbers().map((page, index) => (
+                <div key={index}>
+                  {page === '...' ? (
+                    <span className="px-3 py-2 text-[#4D361E]">...</span>
+                  ) : (
+                    <motion.button
+                      onClick={() => handlePageChange(page as number)}
+                      className={`px-3 py-2 rounded-lg transition-colors ${
+                        currentPage === page
+                          ? 'bg-[#4D361E] text-white'
+                          : 'bg-white text-[#4D361E] hover:bg-[#E8DDD4] border border-[#C4A173]'
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {page}
+                    </motion.button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Next Button */}
+            <motion.button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-[#C4A173] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#6B3410] transition-colors"
+              whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
+              whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+            >
+              Next ›
+            </motion.button>
+          </div>
+        )}
+
+        {/* Page Info */}
+        {impacts.length > 0 && (
+          <div className="text-center mt-4">
+            <p className="text-[#4D361E] text-sm">
+              Showing {startIndex + 1}-{Math.min(endIndex, impacts.length)} of {impacts.length} impacts
+            </p>
+          </div>
+        )}
       </motion.div>
     </section>
   );

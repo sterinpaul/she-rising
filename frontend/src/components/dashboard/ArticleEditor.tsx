@@ -9,6 +9,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import RichTextEditor from './RichTextEditor';
+import PreviewModal from './PreviewModal';
 import type { Article } from '../../types/dashboard';
 import { articleService } from '../../services/articleService';
 import { authUtils } from '../../utils/auth';
@@ -20,15 +21,19 @@ const ArticleEditor: React.FC = () => {
   
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
-  const [article, setArticle] = useState<Partial<Article>>({
-    title: '',
-    content: '',
-    images: [],
-    author: authUtils.getCurrentUser()?.name || '',
-    category: ''
+  const [article, setArticle] = useState<Partial<Article>>(() => {
+    const currentUser = authUtils.getCurrentUser();
+    return {
+      title: '',
+      content: '',
+      images: [],
+      author: currentUser?.name || '',
+      category: ''
+    };
   });
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
 
   const categories = ['Education', 'Health', 'STEM', 'Community', 'Mental Health', 'Technology', 'Media', 'Sustainability', 'Digital', 'Feminism', 'Environment', 'Policy', 'Activism', 'Culture', 'Economics', 'Academic', 'Global'];
 
@@ -63,19 +68,68 @@ const ArticleEditor: React.FC = () => {
     try {
       setSaving(true);
       
+      // Validate required fields
+      if (!article.title?.trim()) {
+        alert('Title is required');
+        setSaving(false);
+        return;
+      }
+      
+      if (!article.content?.trim()) {
+        alert('Content is required');
+        setSaving(false);
+        return;
+      }
+      
       const articleData = {
-        ...article
+        title: article.title?.trim() || '',
+        content: article.content?.trim() || '',
+        author: article.author?.trim() || '',
+        category: article.category?.trim() || '',
+        images: article.images || [] // This will be used for existingImages in the service
       };
-
+      
+     
       if (isEditing && id) {
+        console.log('Updating article with ID:', id);
         await articleService.updateArticle(id, articleData, newImageFiles);
       } else {
         await articleService.createArticle(articleData as Omit<Article, 'id'>, newImageFiles);
       }
 
+      console.log('Save successful, navigating to articles list');
       navigate('/dashboard/articles');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save article:', error);
+      console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        headers: error.response?.headers,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          baseURL: error.config?.baseURL
+        }
+      });
+      
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error.response?.status === 500) {
+        errorMessage = `Server Error (500): The backend server encountered an internal error. Please check if the server is running properly and check the server logs for more details.`;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.statusText) {
+        errorMessage = `${error.response.status} ${error.response.statusText}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`Failed to save article: ${errorMessage}\n\nCheck console for detailed error information.`);
     } finally {
       setSaving(false);
     }
@@ -87,13 +141,49 @@ const ArticleEditor: React.FC = () => {
     if (files) {
       const fileArray = Array.from(files);
       
+      // Validate file types and sizes
+      const validFiles = [];
+      const maxSize = 10 * 1024 * 1024; // 10MB per file
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+      
+      for (const file of fileArray) {
+        // Check file type
+        if (!allowedTypes.includes(file.type.toLowerCase())) {
+          alert(`File "${file.name}" is not a supported image type. Supported types: JPEG, PNG, GIF, WebP, SVG`);
+          continue;
+        }
+        
+        // Check file size
+        if (file.size > maxSize) {
+          alert(`File "${file.name}" is too large. Maximum size is 10MB per file.`);
+          continue;
+        }
+        
+        // Check if file name has any problematic characters
+        if (!/^[a-zA-Z0-9._-]+$/.test(file.name)) {
+          alert(`File "${file.name}" has invalid characters. Please use only letters, numbers, dots, hyphens, and underscores.`);
+          continue;
+        }
+        
+        validFiles.push(file);
+      }
+      
+      if (validFiles.length === 0) {
+        return; // No valid files to process
+      }
+      
       // Limit to 10 images total
       const currentImageCount = (article.images?.length || 0) + newImageFiles.length;
       const remainingSlots = 10 - currentImageCount;
-      const filesToAdd = fileArray.slice(0, remainingSlots);
+      const filesToAdd = validFiles.slice(0, remainingSlots);
+      
+      if (filesToAdd.length < validFiles.length) {
+        alert(`Maximum 10 images allowed. Only ${filesToAdd.length} images will be added.`);
+      }
       
       if (filesToAdd.length < fileArray.length) {
-        alert(`Maximum 10 images allowed. Only ${filesToAdd.length} images will be added.`);
+        const skipped = fileArray.length - filesToAdd.length;
+        console.log(`${skipped} files were skipped due to validation errors or limits.`);
       }
       
       // Add new files
@@ -110,6 +200,12 @@ const ArticleEditor: React.FC = () => {
         };
         reader.readAsDataURL(file);
       });
+      
+      console.log('Valid files added:', filesToAdd.map(f => ({
+        name: f.name,
+        size: f.size,
+        type: f.type
+      })));
     }
   };
 
@@ -171,24 +267,29 @@ const ArticleEditor: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          {isEditing && (
-            <motion.button
-              onClick={() => navigate(`/article/${id}`)}
-              className="inline-flex items-center px-4 py-2 border border-[#C4A173] text-[#C4A173] rounded-lg hover:bg-[#C4A173] hover:text-white transition-colors"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <EyeIcon className="w-4 h-4 mr-2" />
-              Preview
-            </motion.button>
-          )}
+          <motion.button
+            onClick={() => setShowPreview(true)}
+            disabled={!article.title || !article.content}
+            className="inline-flex items-center px-4 py-2 border border-[#C4A173] text-[#C4A173] rounded-lg hover:bg-[#C4A173] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            whileHover={{ scale: (!article.title || !article.content) ? 1 : 1.02 }}
+            whileTap={{ scale: (!article.title || !article.content) ? 1 : 0.98 }}
+          >
+            <EyeIcon className="w-4 h-4 mr-2" />
+            Preview
+          </motion.button>
           
           <motion.button
             onClick={handleSave}
-            disabled={saving || !article.title || !article.content}
+            disabled={saving || !article.title?.trim() || !article.content?.trim()}
             className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#C4A173] to-[#4D361E] text-white rounded-lg hover:shadow-lg transition-shadow disabled:opacity-50"
-            whileHover={{ scale: (saving || !article.title || !article.content) ? 1 : 1.02 }}
-            whileTap={{ scale: (saving || !article.title || !article.content) ? 1 : 0.98 }}
+            whileHover={{ scale: (saving || !article.title?.trim() || !article.content?.trim()) ? 1 : 1.02 }}
+            whileTap={{ scale: (saving || !article.title?.trim() || !article.content?.trim()) ? 1 : 0.98 }}
+            title={
+              saving ? 'Saving...' : 
+              !article.title?.trim() ? 'Title is required' :
+              !article.content?.trim() ? 'Content is required' :
+              'Save article'
+            }
           >
             <CheckIcon className="w-4 h-4 mr-2" />
             {saving ? 'Saving...' : 'Save Article'}
@@ -356,6 +457,20 @@ const ArticleEditor: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Preview Modal */}
+      <PreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        data={{
+          ...article,
+          images: [
+            ...(article.images || []),
+            ...imagePreview
+          ]
+        }}
+        type="article"
+      />
     </motion.div>
   );
 };

@@ -5,13 +5,14 @@ import { articleService } from '../services/articleService';
 import type { Article } from '../types/dashboard';
 
 const Articles = () => {
-  const ref = useRef(null);
+  const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const navigation = useNavigate()
+  const navigation = useNavigate();
 
-  const [visibleArticles, setVisibleArticles] = useState(10);
-  const [isLoading, setIsLoading] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -45,8 +46,8 @@ const Articles = () => {
 
   const loadArticles = async () => {
     try {
-      setIsLoading(true);
-      const response = await articleService.getPublicArticles({ limit: 20 });
+      setLoading(true);
+      const response = await articleService.getPublicArticles({ limit: 100 }); // Load more to enable pagination
       if (response.data) {
         const articlesArray = Array.isArray(response.data) ? response.data : [response.data];
         setArticles(articlesArray);
@@ -54,20 +55,49 @@ const Articles = () => {
     } catch (error) {
       console.error('Failed to load articles:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const displayedArticles = articles.slice(0, visibleArticles);
-  const hasMoreArticles = visibleArticles < articles.length;
+  // Calculate pagination
+  const totalPages = Math.ceil(articles.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const displayedArticles = articles.slice(startIndex, endIndex);
 
-  const loadMoreArticles = () => {
-    setIsLoading(true);
-    // Simulate loading delay
-    setTimeout(() => {
-      setVisibleArticles(prev => Math.min(prev + 20, articles.length));
-      setIsLoading(false);
-    }, 800);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Smooth scroll to top of section
+    ref.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Generate page numbers array
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
   };
 
   return (
@@ -114,62 +144,116 @@ const Articles = () => {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12"
           variants={containerVariants}
         >
-          {displayedArticles.map((article, index) => (
-            <motion.div
-              key={article._id}
-              variants={cardVariants}
-              transition={{ delay: (index % 10) * 0.05 }}
-              className="group"
-              whileHover={{ 
-                scale: 1.03,
-                y: -5,
-                transition: { duration: 0.3 }
-              }}
-              onClick={()=>navigation(`/article/${article._id}`)}
-            >
-              <div className="bg-white rounded-2xl h-48 flex flex-col justify-end shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-                {/* Article image or placeholder */}
-                <div className="flex-grow mb-4 bg-gray-200 rounded-lg">
-                  {article.images && article.images.length > 0 ? (
-                    <img 
-                      src={article.images[0]} 
-                      alt={article.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200"></div>
-                  )}
-                </div>
-                
-                {/* Article info */}
-                <div className='px-4 pb-4'>
-                  <h3 className="text-black font-bold text-sm mb-2 leading-tight line-clamp-2">
-                    {article.title}
-                  </h3>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-600 font-medium">{article.category || 'Article'}</span>
-                    <span className="text-gray-500">{new Date(article.createdAt).toLocaleDateString()}</span>
+          {loading ? (
+            // Loading skeleton
+            [...Array(itemsPerPage)].map((_, index) => (
+              <motion.div
+                key={index}
+                className="bg-gray-200 rounded-2xl h-48 animate-pulse"
+                variants={cardVariants}
+              />
+            ))
+          ) : (
+            displayedArticles.map((article, index) => (
+              <motion.div
+                key={article._id}
+                variants={cardVariants}
+                transition={{ delay: (index % 10) * 0.05 }}
+                className="group"
+                whileHover={{ 
+                  scale: 1.03,
+                  y: -5,
+                  transition: { duration: 0.3 }
+                }}
+                onClick={()=>navigation(`/article/${article._id}`)}
+              >
+                <div className="bg-white rounded-2xl h-48 flex flex-col justify-end shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+                  {/* Article image or placeholder */}
+                  <div className="flex-grow mb-4 bg-gray-200 rounded-lg">
+                    {article.images && article.images.length > 0 ? (
+                      <img 
+                        src={article.images[0]} 
+                        alt={article.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200"></div>
+                    )}
+                  </div>
+                  
+                  {/* Article info */}
+                  <div className='px-4 pb-4'>
+                    <h3 className="text-black font-bold text-sm mb-2 leading-tight line-clamp-2">
+                      {article.title}
+                    </h3>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-600 font-medium">{article.category || 'Article'}</span>
+                      <span className="text-gray-500">{new Date(article.createdAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          )}
         </motion.div>
 
-        {/* Load More Button */}
-        {hasMoreArticles && (
-          <div className="grid place-items-center">
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center mt-12 space-x-2">
+            {/* Previous Button */}
             <motion.button
-              onClick={loadMoreArticles}
-              disabled={isLoading}
-              className="w-16 h-16 bg-[#C4A173] rounded-full flex items-center justify-center shadow-lg hover:bg-[#6B3410] transition-colors disabled:opacity-50"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              animate={isLoading ? { rotate: 360 } : {}}
-              transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-white text-[#4D361E] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors border border-gray-300"
+              whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
+              whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
             >
-              <img src="/icons/arrow.svg" className="-rotate-90" alt="Arrow Right" />
+              ‹ Previous
             </motion.button>
+
+            {/* Page Numbers */}
+            <div className="flex items-center space-x-1">
+              {getPageNumbers().map((page, index) => (
+                <div key={index}>
+                  {page === '...' ? (
+                    <span className="px-3 py-2 text-[#4D361E]">...</span>
+                  ) : (
+                    <motion.button
+                      onClick={() => handlePageChange(page as number)}
+                      className={`px-3 py-2 rounded-lg transition-colors ${
+                        currentPage === page
+                          ? 'bg-[#4D361E] text-white'
+                          : 'bg-white text-[#4D361E] hover:bg-[#E8DDD4] border border-[#C4A173]'
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {page}
+                    </motion.button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Next Button */}
+            <motion.button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-white text-[#4D361E] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors border border-gray-300"
+              whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
+              whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+            >
+              Next ›
+            </motion.button>
+          </div>
+        )}
+
+        {/* Page Info */}
+        {articles.length > 0 && (
+          <div className="text-center mt-4">
+            <p className="text-white text-sm">
+              Showing {startIndex + 1}-{Math.min(endIndex, articles.length)} of {articles.length} articles
+            </p>
           </div>
         )}
       </motion.div>

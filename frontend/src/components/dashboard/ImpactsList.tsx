@@ -20,18 +20,42 @@ const ImpactsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    hasNext: false,
+    hasPrev: false
+  });
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    loadImpacts();
-  }, []);
+    loadImpacts(1);
+    setCurrentPage(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
 
-  const loadImpacts = async () => {
+  useEffect(() => {
+    loadImpacts(currentPage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
+
+  const loadImpacts = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await impactService.getAllImpacts({ limit: 20 });
+      const response = await impactService.getAllImpacts({ 
+        limit: itemsPerPage, 
+        page,
+        search: searchTerm || undefined
+      });
       if (response.data) {
         const impactsArray = Array.isArray(response.data) ? response.data : [response.data];
         setImpacts(impactsArray);
+        
+        if (response.pagination) {
+          setPagination(response.pagination);
+        }
       }
     } catch (error) {
       console.error('Failed to load impacts:', error);
@@ -43,19 +67,50 @@ const ImpactsList: React.FC = () => {
   const handleDelete = async (id: string) => {
     try {
       await impactService.deleteImpact(id);
-      await loadImpacts();
+      await loadImpacts(currentPage);
       setDeleteConfirm(null);
     } catch (error) {
       console.error('Failed to delete impact:', error);
     }
   };
 
-  const filteredImpacts = impacts.filter(impact => {
-    const matchesSearch = impact.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (impact.content && impact.content.toLowerCase().includes(searchTerm.toLowerCase()));
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Generate page numbers array
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    const totalPages = pagination.totalPages;
     
-    return matchesSearch
-  });
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
+  // Since we're using server-side filtering, we don't need to filter here
+  const filteredImpacts = impacts;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -237,6 +292,66 @@ const ImpactsList: React.FC = () => {
                 </motion.div>
               );
             })}
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="flex justify-center items-center mt-8 space-x-2">
+                {/* Previous Button */}
+                <motion.button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={!pagination.hasPrev}
+                  className="px-4 py-2 bg-white text-[#4D361E] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E8DDD4] transition-colors border border-[#C4A173]"
+                  whileHover={{ scale: !pagination.hasPrev ? 1 : 1.05 }}
+                  whileTap={{ scale: !pagination.hasPrev ? 1 : 0.95 }}
+                >
+                  ‹ Previous
+                </motion.button>
+
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-1">
+                  {getPageNumbers().map((page, index) => (
+                    <div key={index}>
+                      {page === '...' ? (
+                        <span className="px-3 py-2 text-[#4D361E]">...</span>
+                      ) : (
+                        <motion.button
+                          onClick={() => handlePageChange(page as number)}
+                          className={`px-3 py-2 rounded-lg transition-colors ${
+                            currentPage === page
+                              ? 'bg-[#4D361E] text-white'
+                              : 'bg-white text-[#4D361E] hover:bg-[#E8DDD4] border border-[#C4A173]'
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {page}
+                        </motion.button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Next Button */}
+                <motion.button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!pagination.hasNext}
+                  className="px-4 py-2 bg-white text-[#4D361E] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E8DDD4] transition-colors border border-[#C4A173]"
+                  whileHover={{ scale: !pagination.hasNext ? 1 : 1.05 }}
+                  whileTap={{ scale: !pagination.hasNext ? 1 : 0.95 }}
+                >
+                  Next ›
+                </motion.button>
+              </div>
+            )}
+
+            {/* Page Info */}
+            {impacts.length > 0 && (
+              <div className="text-center mt-4">
+                <p className="text-[#6B3410] text-sm">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, pagination.totalItems)} of {pagination.totalItems} impacts
+                </p>
+              </div>
+            )}
           </div>
         )}
       </motion.div>
